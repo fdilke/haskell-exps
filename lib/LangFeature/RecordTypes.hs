@@ -1,4 +1,4 @@
-module RecordTypes where
+module LangFeature.RecordTypes where
 
 data Person = Person { name :: String
                      , shoeSize :: Int

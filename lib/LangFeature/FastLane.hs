@@ -1,4 +1,4 @@
-module FastLane (ldaPlusOne, ldaAddThree) where
+module LangFeature.FastLane (ldaPlusOne, ldaAddThree) where
 
 ldaPlusOne :: Int -> Int
 ldaPlusOne = \x -> x + 1

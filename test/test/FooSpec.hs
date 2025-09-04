@@ -1,4 +1,4 @@
-module FooSpec where
+module Test.FooSpec where
 
 import Test.Hspec
 

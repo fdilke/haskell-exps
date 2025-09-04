@@ -1,4 +1,11 @@
 module Main (main) where
+import Test.Hspec
+
+--import Test.FastLaneSpec
+--import Test.FooSpec
 
 main :: IO ()
-main = putStrLn "Test suite not yet implemented."
+main = hspec $ do
+    describe "My amazing tests"  $ pure ()
+--    describe "My amazing tests" [ FastLaneSpec FooSpec ]
+

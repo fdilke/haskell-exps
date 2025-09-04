@@ -1,6 +1,6 @@
-module FastLaneSpec where
+module Test.FastLaneSpec where
 
-import FastLane
+import LangFeature.FastLane
 import Test.Hspec
 -- import Test.Hspec.QuickCheck (prop)
 

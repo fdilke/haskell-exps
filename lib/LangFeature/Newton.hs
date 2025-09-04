@@ -1,4 +1,4 @@
-module Newton(mySqrt) where
+module LangFeature.Newton(mySqrt) where
 
 import Data.List(find)
 
