@@ -1,8 +1,8 @@
-module NewtonSpec where
+module Test.NewtonSpec where
 
 import Test.Hspec
 import Text.Printf
-import Newton
+import LangFeature.Newton
 
 expected :: Fractional a => a
 expected = 1.4142

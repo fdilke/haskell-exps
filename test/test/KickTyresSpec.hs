@@ -1,6 +1,6 @@
-module KickTyresSpec where
+module Test.KickTyresSpec where
 
-import KickTyres
+import LangFeature.KickTyres
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 

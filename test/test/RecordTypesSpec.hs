@@ -1,6 +1,6 @@
-module RecordTypesSpec where
+module Test.RecordTypesSpec where
 
-import RecordTypes
+import LangFeature.RecordTypes
 import Test.Hspec
 import Test.Hspec.QuickCheck ()
 
