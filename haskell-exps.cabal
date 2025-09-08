@@ -78,15 +78,24 @@ test-suite haskell-exps-test
 
     -- Test dependencies.
     build-depends:    base, hspec, langfeatures
+    other-modules:    Test.FastLaneSpec,
+                      Test.FooSpec,
+                      Test.KickTyresSpec,
+                      Test.NewtonSpec,
+                      Test.RecordTypesSpec
 
 executable haskell-exps
-  build-depends:    base
+  build-depends:    base, containers
   main-is:          Main.hs
+  other-modules:    FancyToposStuff
   hs-source-dirs:   src
   default-language: Haskell2010
 
 library langfeatures
   build-depends:   base
   hs-source-dirs:  lib
-  exposed-modules: LangFeature.FastLane, LangFeature.KickTyres, LangFeature.Newton, LangFeature.RecordTypes
+  exposed-modules: LangFeature.FastLane,
+                   LangFeature.KickTyres,
+                   LangFeature.Newton,
+                   LangFeature.RecordTypes
   ghc-options:     -Wall
