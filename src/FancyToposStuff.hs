@@ -1,7 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, TypeFamilies #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE GADTs #-}
 
-module Main where
+module FancyToposStuff where
 
 import Data.Set
 
@@ -13,7 +14,8 @@ class Topos t dot arrow where
     id :: dot x -> arrow x x
     compose :: arrow x y -> arrow y z -> arrow x z
 
-data FiniteSetsDot a = Set a
+data FiniteSetsDot a where
+  Set :: a -> FiniteSetsDot a
 
 data FiniteSetsArrow a b = FiniteSetsArrow {
     source :: FiniteSetsDot a,
