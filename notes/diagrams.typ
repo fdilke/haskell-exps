@@ -27,6 +27,8 @@ $ mat(..#range(1, 5).chunks(2)) $
 $ lim_x =
     op("lim", limits: #true)_x $
 
+a fun diagram:
+
 #set text(font: "monofur")
 
 #let cdu(name) = ([CDU], table.cell(fill: black, text(fill: white, name)))
