@@ -13,4 +13,6 @@ Install the Haskell Language Support plugin
 In the plugin's Settings,  set the 'Manage HLS' value to
 PATH rather than GHCUp.
 (Can fix it to automatically use the nix-shell? Document here)
- 
+
+also helpful: to clean:
+rm -rf ~/.cache/ghcide/ && rm -rf ~/.cache/hie-bios/ 
