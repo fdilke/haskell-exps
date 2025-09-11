@@ -16,10 +16,15 @@ mySqrt q =
    case find (closeEnough q standardTolerance) (iterate (newt q) (q/2)) of
      Just root -> root
      Nothing -> -1
-    where 
+    where
+      f :: Fractional a => a -> a -> a
+      f p x = x*x - p
+      f' :: Fractional a => a -> a -> a
+      f' _ x = 2 * x
       newt :: Fractional a => a -> a -> a
-      newt p x = (x + p/x)/2
-      
+    --   newt p x = (x + p/x)/2
+      newt p x = x - f p x/f' p x
+
 
 
 
