@@ -8,4 +8,5 @@ pkgs.haskellPackages.shellFor {
     cabal-install
   ];
   withHoogle = true;
+  shellHook = "unset TEMP TMP TEMPDIR TMPDIR";
 }
