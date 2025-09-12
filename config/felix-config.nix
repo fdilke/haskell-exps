@@ -147,12 +147,15 @@ in {
      # whatsapp
      # signal
      # linear
+     # typst
+     tinymist
      haskell.compiler.ghc967
      haskellPackages.cabal-install
      # haskellPackages.ShellFor
 #     haskellPackages.ghcup
      # haskellPackages.stack
      # haskellPackages.hlint
+     (pkgs.makeDesktopItem { name = "gather"; desktopName = "Gather"; exec = "${pkgs.lib.getExe pkgs.chromium} --app=https://app.gather.town/app/BMa0PDnHghjBlmqU/obsidiansystems"; })
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -200,6 +203,7 @@ in {
   #
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
   system.stateVersion = "25.05"; # Did you read the comment?
+ 
 
 }
 
