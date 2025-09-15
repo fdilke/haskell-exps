@@ -37,5 +37,7 @@ saved file as .xdp-test-text.typ-VbP29r
 because obviously you would
 installed VLC, can play movies? yes. although there was an adequate default player.
 
+Hoogle: can search for things like [a] -> [b] -> [(a,b)]
+
 	
 	
