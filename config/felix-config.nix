@@ -5,6 +5,10 @@
 { config, lib, pkgs, ... }:
   
 let 
+  gnomeExts = with pkgs; [
+    gnomeExtensions.hide-cursor
+    gnomeExtensions.tiling-shell
+  ];
    authorizedKeys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE1/j87BAWauqvPy6ZHvEj6DEDXVTJquIPTMjWC3Lsff felix@nixos" 
 	"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQClZps7D/roOfL5TfWj0ZpkFoVtoDHqSku+68wwQHDJMZUSw6dy9N37iC66z4Q9B62rclZ8EDn4IljwwxDcslmNXwZDS/t7I4Qpfb+91RjMpwCEyvpdCuK2ziUtPsLOFuF8U3vCsorbcSKsOI1CC6w030iTH4RNA7P585fqgjhfbiPT36RrlyAuMWYR+Md4tqoItncOT2GJPDJWcapnaRAQQ1urHcd9/+2g3rlmA+KbbMyDFofkLYr3i8aPaP4kuTiS/ByYJGE1Rd4gITa7Y5WOwB8CmwbQ4sxMGWUcdTnHVTR+XLTMmytuPKOkDyCExBXm4kEioCh3BmDPHFXYDO/48wE6gXcH9r82+Xx8CFtUiWX+kZx90uoFlw0F4WHWMavS7Q1AiGmqK+9166VxqdP7PVVTB+bXprjYHJtRK/HLHTM/wPvaHn5o6Ob8CVGFoRxnlfaNUWQ0TQtpyQv3Mf/Sc2XELA0/0i4zUmYANKyPXjyay7HJaLwE/jPBLla28Qs= root@nixos"
 	];
@@ -149,15 +153,57 @@ in {
      # linear
      # typst
      tinymist
+     julia-bin
+     rustc
+     rustup
+     rustfmt
      haskell.compiler.ghc967
      haskellPackages.cabal-install
+     (haskellPackages.ghcWithPackages (hpkgs: with hpkgs; [
+      aeson
+      cassava
+      colour
+      diagrams-contrib
+      diagrams-core
+      diagrams-graphviz
+      diagrams-lib
+      diagrams-svg
+      evdev
+      extra
+      fgl
+      file-io
+      generic-optics
+      graphviz
+      JuicyPixels
+      lens
+      lifx-lan
+      lucid2
+      massiv
+      network
+      optics
+      optics-extra
+      optparse-applicative
+      optparse-generic
+      pretty-simple
+      process-extras
+      safe
+      servant
+      servant-client
+      servant-server
+      shake
+      wai
+      warp
+    ]))
+    fourmolu
+    haskell-language-server
      # haskellPackages.ShellFor
 #     haskellPackages.ghcup
      # haskellPackages.stack
      # haskellPackages.hlint
-     (pkgs.makeDesktopItem { name = "gather"; desktopName = "Gather"; exec = "${pkgs.lib.getExe pkgs.chromium} --app=https://app.gather.town/app/BMa0PDnHghjBlmqU/obsidiansystems"; })
-  ];
-
+     (pkgs.makeDesktopItem { name = "Gather"; desktopName = "Gather"; exec = "${pkgs.lib.getExe pkgs.chromium} --app=https://app.gather.town/app/BMa0PDnHghjBlmqU/obsidiansystems"; })
+     (pkgs.makeDesktopItem { name = "Linear"; desktopName = "Linear"; exec = "${pkgs.lib.getExe pkgs.chromium} --app=https://linear.app/obsidiansystems/team/ARIA/active"; })
+  ] ++ gnomeExts;
+  
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
