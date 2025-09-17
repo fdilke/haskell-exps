@@ -19,18 +19,11 @@ myNewton f f' x =
 
 mySqrt :: forall a. Ord a => Fractional a => a -> a
 mySqrt q =
-   case find (closeEnough q standardTolerance) (iterate newt (q/2)) of
+   case find (closeEnough q standardTolerance) (iterate (myNewton f f') (q/2)) of
      Just root -> root
      Nothing -> -1
     where
-      z :: a -> a -> a
-      z p x = x*x - p
-      z' :: a -> a -> a
-      z' _ x = 2 * x
       f :: a -> a
       f x = x*x - q
       f' :: a -> a
-      f' x = x*x - q
-      newt :: a -> a
-       -- newt p x = (x + p/x)/2
-      newt x = x - f x/f' x
+      f' x = 2*x
