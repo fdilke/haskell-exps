@@ -6,6 +6,7 @@ import qualified Test.FooSpec as Foo
 import qualified Test.KickTyresSpec as KickTyres
 import qualified Test.NewtonSpec as Newton
 import qualified Test.RecordTypesSpec as RecordTypes
+import qualified Test.AutomataSpec as Automata
 --import Test.FooSpec
 
 main :: IO ()
@@ -15,5 +16,6 @@ main = hspec $ do
     describe "KickTyres" KickTyres.spec
     describe "Newton" Newton.spec
     describe "RecordTypes" RecordTypes.spec
+    describe "Automata" Automata.spec
 --    describe "My amazing tests" [ FastLaneSpec FooSpec ]
 
