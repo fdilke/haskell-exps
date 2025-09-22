@@ -64,12 +64,12 @@ listStates2' automaton inputs =
 
 
 finalState2 :: Automaton2 state input -> [input] -> state
-finalState2 automaton inputs = foldr automaton.update automaton.initial inputs
+-- finalState2 automaton inputs = foldr automaton.update automaton.initial inputs
+finalState2 automaton inputs = foldl (flip automaton.update) automaton.initial inputs
 listStates2 :: Automaton2 state input -> [input] -> [state]
 listStates2 automaton inputs = scanl (flip automaton.update) automaton.initial inputs
 -- not lazy enough!
 -- listStates2 automaton inputs = scanr automaton.update automaton.initial inputs
-
 
 -- listStates2 automaton inputs =
 --     let
