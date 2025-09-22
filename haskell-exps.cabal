@@ -82,6 +82,8 @@ test-suite haskell-exps-test
                       Test.FooSpec,
                       Test.KickTyresSpec,
                       Test.NewtonSpec,
+                      Test.AutomataSpec,
+                      Test.OlogsSpec,
                       Test.RecordTypesSpec
 
 executable haskell-exps
@@ -97,5 +99,7 @@ library langfeatures
   exposed-modules: LangFeature.FastLane,
                    LangFeature.KickTyres,
                    LangFeature.Newton,
+                   LangFeature.Automata,
+                   LangFeature.Ologs,
                    LangFeature.RecordTypes
   ghc-options:     -Wall

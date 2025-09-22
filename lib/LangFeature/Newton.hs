@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module LangFeature.Newton(mySqrt) where
 
 import Data.List(find)
@@ -11,21 +13,17 @@ closeEnough q tolerance est = abs (est * est - q) < tolerance
 standardTolerance :: Fractional a => a
 standardTolerance = 1e-6
 
-mySqrt :: Ord a => Fractional a => a -> a
+myNewton :: Ord a => Fractional a => (a -> a) -> (a -> a) -> a -> a
+myNewton f f' x =
+  x - f x / f' x
+
+mySqrt :: forall a. Ord a => Fractional a => a -> a
 mySqrt q =
-   case find (closeEnough q standardTolerance) (iterate (newt q) (q/2)) of
+   case find (closeEnough q standardTolerance) (iterate (myNewton f f') (q/2)) of
      Just root -> root
      Nothing -> -1
     where
-      f :: Fractional a => a -> a -> a
-      f p x = x*x - p
-      f' :: Fractional a => a -> a -> a
-      f' _ x = 2 * x
-      newt :: Fractional a => a -> a -> a
-    --   newt p x = (x + p/x)/2
-      newt p x = x - f p x/f' p x
-
-
-
-
-
+      f :: a -> a
+      f x = x*x - q
+      f' :: a -> a
+      f' x = 2*x
