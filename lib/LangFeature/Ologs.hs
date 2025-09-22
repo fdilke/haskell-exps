@@ -29,3 +29,5 @@ data Olog dot = Olog
     identities :: [Identity]
   }
 
+sanity :: forall dot. Eq dot => Olog dot -> Bool
+sanity olog = False
