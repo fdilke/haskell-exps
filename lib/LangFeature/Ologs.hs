@@ -11,8 +11,21 @@
 
 module LangFeature.Ologs where
 
-import GHC.StaticPtr (staticPtrKeys)
+-- import GHC.StaticPtr (staticPtrKeys)
 
 doNothing :: Int -> Int
 doNothing x = x
+
+newtype Arc dot = Arc (String, dot, dot)
+data Identity = Identity {
+    lhs :: [String],
+    rhs :: [String]
+}
+
+data Olog dot = Olog
+  { 
+    dots :: [dot],
+    arcs :: [Arc dot],
+    identities :: [Identity]
+  }
 
