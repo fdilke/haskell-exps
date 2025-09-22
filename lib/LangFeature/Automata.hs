@@ -50,8 +50,8 @@ data Automaton2 state input = Automaton2
 -- which is added to an (existing list of states) ++ 
 --
 
-listStates2 :: forall state input. Automaton2 state input -> [input] -> [state]
-listStates2 automaton inputs =
+listStates2' :: forall state input. Automaton2 state input -> [input] -> [state]
+listStates2' automaton inputs =
     inner automaton.initial inputs
   where
     inner :: state -> [input] -> [state]
@@ -62,16 +62,14 @@ listStates2 automaton inputs =
 -- listStates2 automaton [] = [automaton.initial]
 -- listStates2 automaton (head:tail) = automaton.initial ++ tail
 
-let
-    fn :: (input -> [state] -> [state])
-    fn = \i -> \states ->
-        let
-            z = automaton.update i (last states)
-        in
-            states ++ [z]
-    h = foldr fn [automaton.initial] inputs
-in
-    h
+
+finalState2 :: Automaton2 state input -> [input] -> state
+finalState2 automaton inputs = foldr automaton.update automaton.initial inputs
+listStates2 :: Automaton2 state input -> [input] -> [state]
+listStates2 automaton inputs = scanl (flip automaton.update) automaton.initial inputs
+-- not lazy enough!
+-- listStates2 automaton inputs = scanr automaton.update automaton.initial inputs
+
 
 -- listStates2 automaton inputs =
 --     let
