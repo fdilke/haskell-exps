@@ -35,6 +35,15 @@ data Automaton2 state input = Automaton2
     update :: input -> state -> state
   }
 
+data Automaton3 state input = Automaton3
+  { initial :: state,
+    update :: input -> state -> state,
+    acceptable :: state -> Bool
+  }
+
+
+
+
 -- foldr :: (a -> b -> b) -> b -> t a -> b
 -- listStates2 :: forall state input. Automaton2 state input -> [input] -> [state]
 -- listStates2 automaton inputs = listStates2sub inputs [automaton.initial]
@@ -86,3 +95,7 @@ listStates2 automaton inputs = scanl (flip automaton.update) automaton.initial i
 -- in scanr fn automaton.initial inputs
 -- iterate  automaton.update  automaton.initial
 -- error "listStates undefined"
+
+
+acceptInputs3 :: forall state input . Automaton3 state input -> [input] -> Bool
+acceptInputs3 automaton inputs = automaton.acceptable $ foldl (flip automaton.update) automaton.initial inputs

@@ -30,10 +30,21 @@ spec = do
             take 5 (listStates2 automaton2 ([4, 7, 12] ++ repeat 1)) `shouldBe` [0, 4, 11, 23, 24]
             listStates2 automaton2 [4, 7, 12] `shouldBe` [0, 4, 11, 23]
   describe "automaton3 can process a list of inputs and output the resulting states" $ do
-    return ()
+    let automaton3 :: Automaton3 Parity ()
+        automaton3 = Automaton3 {initial = Even, update = \n s -> flipP s , acceptable = (== Odd)}
+     in do
+          it "does stuff" $ do
+            acceptInputs3 automaton3 [(),(),()] `shouldBe` True
+            acceptInputs3 automaton3 [(),()] `shouldBe` False
+            acceptInputs3 automaton3 [()] `shouldBe` True
+            acceptInputs3 automaton3 [] `shouldBe` False
+            -- take 5 (listStates3 automaton3 ([4, 7, 12] ++ repeat 1)) `shouldBe` [0, 4, 11, 23, 24]
+            -- listStates3 automaton2 [4, 7, 12] `shouldBe` [0, 4, 11, 23]
 
--- it "does stuff" $ do
---   take 5 (listStates2 automaton2 ([4,7,12] ++ repeat 1) ) `shouldBe` [0,4,11,23,24]
---   listStates2 automaton2 [4,7,12] `shouldBe`  [0,4,11,23]
 
 data S = A | B | C deriving (Eq, Show)
+data Parity = Even | Odd deriving (Eq, Show)
+
+flipP :: Parity -> Parity
+flipP Even = Odd
+flipP Odd = Even
