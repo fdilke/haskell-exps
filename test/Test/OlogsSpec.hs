@@ -7,13 +7,13 @@
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 {-# HLINT ignore "Avoid lambda" #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Test.OlogSpec where
+module Test.OlogsSpec where
 
-import LangFeature.Olog
+import LangFeature.Ologs
 import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "function successfully does nothing" $ do
+  describe "function successfully does very little" $ do
     it "mimic (+1) function" $
       doNothing 4 `shouldBe` 4

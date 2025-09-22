@@ -9,7 +9,7 @@
 
 {-# HLINT ignore "Collapse lambdas" #-}
 
-module LangFeature.Olog where
+module LangFeature.Ologs where
 
 import GHC.StaticPtr (staticPtrKeys)
 

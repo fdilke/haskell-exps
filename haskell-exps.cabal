@@ -83,7 +83,7 @@ test-suite haskell-exps-test
                       Test.KickTyresSpec,
                       Test.NewtonSpec,
                       Test.AutomataSpec,
-                      Test.OlogSpec,
+                      Test.OlogsSpec,
                       Test.RecordTypesSpec
 
 executable haskell-exps
@@ -100,6 +100,6 @@ library langfeatures
                    LangFeature.KickTyres,
                    LangFeature.Newton,
                    LangFeature.Automata,
-                   LangFeature.Olog,
+                   LangFeature.Ologs,
                    LangFeature.RecordTypes
   ghc-options:     -Wall
