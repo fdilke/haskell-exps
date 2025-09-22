@@ -6,10 +6,12 @@
 {-# HLINT ignore "Use const" #-}
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 {-# HLINT ignore "Avoid lambda" #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Test.AutomataSpec where
 
 import LangFeature.Automata
 import Test.Hspec
+import Test.Hspec.QuickCheck (prop)
 
 spec :: Spec
 spec = do
@@ -33,7 +35,9 @@ spec = do
     let automaton3 :: Automaton3 Parity ()
         automaton3 = Automaton3 {initial = Even, update = \n s -> flipP s , acceptable = (== Odd)}
      in do
-          it "does stuff" $ do
+          prop "Automaton3 tests" $ \inputs -> 
+            acceptInputs3 automaton3 inputs == (length inputs `mod` 2 == 1)
+          it "uses correct acceptance criteria" $ do
             acceptInputs3 automaton3 [(),(),()] `shouldBe` True
             acceptInputs3 automaton3 [(),()] `shouldBe` False
             acceptInputs3 automaton3 [()] `shouldBe` True
@@ -48,3 +52,4 @@ data Parity = Even | Odd deriving (Eq, Show)
 flipP :: Parity -> Parity
 flipP Even = Odd
 flipP Odd = Even
+
