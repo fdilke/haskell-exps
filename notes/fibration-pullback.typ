@@ -15,7 +15,7 @@
 = Pullbacks of Vertical-Cartesian Cospans in a Fibration
 
 #lemma("pullbacks of vertical-cartesian cospans in a fibration")[
-  Given a fibred category p: $EE$ -> $BB$ , any cospan $f: x -> y <- z: g$ in $EE$ where $f$ is vertical and $g$ cartesian, has a pullback in $EE$/$BB$.
+  Given a fibred category p: $EE$ -> $BB$ , any cospan $f: x -> y <- z: g$ in $EE$ where $g$ is vertical and $f$ cartesian, has a pullback in $EE$/$BB$.
 ]
 
 #diagram(spacing: 2.5cm, {

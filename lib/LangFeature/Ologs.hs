@@ -16,18 +16,22 @@ module LangFeature.Ologs where
 doNothing :: Int -> Int
 doNothing x = x
 
-newtype Arc dot = Arc (String, dot, dot)
+data Arc dot = Arc {
+  arcId :: String,
+  source :: dot,
+  target :: dot
+  }
 data Identity = Identity {
     lhs :: [String],
     rhs :: [String]
 }
 
 data Olog dot = Olog
-  { 
+  {
     dots :: [dot],
     arcs :: [Arc dot],
     identities :: [Identity]
   }
 
 sanity :: forall dot. Eq dot => Olog dot -> Bool
-sanity olog = False
+sanity olog = all (\arc -> arc.source `elem` olog.dots && arc.target `elem` olog.dots) olog.arcs
