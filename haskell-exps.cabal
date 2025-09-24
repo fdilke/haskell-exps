@@ -94,7 +94,7 @@ executable haskell-exps
   default-language: Haskell2010
 
 library langfeatures
-  build-depends:   base
+  build-depends:   base, containers
   hs-source-dirs:  lib
   exposed-modules: LangFeature.FastLane,
                    LangFeature.KickTyres,

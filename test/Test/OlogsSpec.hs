@@ -53,7 +53,47 @@ spec = do
             makeOlog [0] [] [(["identity"], [])]
       in
         badOlog `shouldBe` Left "bad arc: identity"
-
+    it "arcs in lhs of identities join up" $
+      let
+        badOlog :: MaybeOlog
+        badOlog =
+            makeOlog
+              [0, 1, 2]
+              [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
+              [(["0to1", "1to2"], ["0to2"])]
+      in
+        badOlog `shouldBe` Left "bad identity lhs: [\"0to1\", \"1to2\"], [\"0to2\"]"
+    it "arcs in rhs of identities join up" $
+      let
+        badOlog :: MaybeOlog
+        badOlog =
+            makeOlog
+              [0, 1, 2]
+              [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
+              [(["0to2"], ["0to1", "1to2"])]
+      in
+        badOlog `shouldBe` Left "bad identity rhs: [\"0to2\"], [\"0to1\", \"1to2\"]"
+    it "lhs and rhs of identities have same source and target" $
+      let
+        badOlog :: MaybeOlog
+        badOlog =
+            makeOlog
+              [0, 1, 2]
+              [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
+              [(["1to0", "0to1"], ["1to2", "0to1"])]
+      in
+        badOlog `shouldBe` Left "incoherent identity: [[\"1to0\", \"0to1\"], [\"1to2\", \"0to1\"]]; lhs (0,0); rhs (0,2)"
+    it "identities are ok" $
+      let
+        goodOlog :: MaybeOlog
+        goodOlog =
+            makeOlog
+              [0, 1, 2]
+              [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
+              [(["1to2", "0to1"], ["0to2"])]
+      in
+        isRight goodOlog `shouldBe` True
+    -- it "identities should have the same source and target on both sides" $
   -- describe "create a basic olog" $ do
   --   it "the graph olog" $
   --     let -- x :: Int

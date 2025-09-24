@@ -25,6 +25,9 @@ where
 import Control.Monad
 import Data.Maybe
 import Data.Traversable
+import Data.Foldable (for_)
+import Data.Map (Map)
+import qualified Data.Map as Map
 
 data Arc dot = Arc
   { name :: String,
@@ -69,7 +72,8 @@ makeOlog dots preArcs preIdentities =
             (\(_, _, tgt) -> tgt, "bad target: ")
           ]
     knownArcNames = map (\(name,_,_) -> name) preArcs
-    identityErrors =
+    identityErrors = identityKnownArcErrors <> identityLhsJoinErrors <> identityRhsJoinErrors
+    identityKnownArcErrors =
       concat $
         map
           ( \(lhs, rhs) ->
@@ -85,24 +89,44 @@ makeOlog dots preArcs preIdentities =
                 $ lhs <> rhs)
           )
           preIdentities
+    namesToArcs :: Map String (dot, dot) = _
+    identityLhsJoinErrors = identityXhsJoinErrors (\(lhs, _) -> lhs)
+    identityRhsJoinErrors = identityXhsJoinErrors (\(_, rhs) -> rhs)
+    identityXhsJoinErrors :: (([String], [String]) -> [String]) -> [String]
+    identityXhsJoinErrors picker = [] where
+      arcNames :: [[String]] = picker <$> preIdentities
+    checkTerm :: [String] -> Maybe String
+    checkTerm arcNames =
+      if targets == sources then Nothing else
+          Just $ "bad identity xhs:" <> show arcNames
+      where
+        arcs :: [(dot, dot)] = catMaybes $ flip Map.lookup namesToArcs <$> arcNames
+        targets :: [dot] = tail $ snd <$> arcs
+        sources :: [dot] = init $ fst <$> arcs
+        
+
 
 data MakeOlogError dot
   = BadSource String dot
   | BadTarget String dot
+  | ForbiddenTrivialIdentity
+  | BadArc String
   deriving (Show)
 
 makeOlog' :: (Eq dot) => [dot] -> [(String, dot, dot)] -> [([String], [String])] -> Either (MakeOlogError dot) (Olog dot)
-makeOlog' dots arcs0 identities0 = do
-  arcs <- for arcs0 \(name, source, target) -> do
-    -- unless (source `elem` dots) $ Left $ BadSource name source
-    if source `elem` dots then pure () else Left $ BadSource name source
+makeOlog' dots preArcs preIdentities = do
+  arcs <- for preArcs \(name, source, target) -> do
+    -- if source `elem` dots then pure () else Left $ BadSource name source
+    unless (source `elem` dots) $ Left $ BadSource name source
     unless (target `elem` dots) $ Left $ BadTarget name target
     pure Arc {name, source, target}
-  identities <- for identities0 \(lhs, rhs) -> do
-    -- TODO add checks
-    -- _
+  identities <- for preIdentities \(lhs, rhs) -> do
+    when (null lhs && null rhs) $ Left ForbiddenTrivialIdentity
+    for_ (lhs <> rhs) \arc -> unless (arc `elem` knownArcNames) $ Left $ BadArc arc
     pure Identity {lhs, rhs}
   pure Olog {dots, arcs, identities}
+  where
+    knownArcNames = map (\(name,_,_) -> name) preArcs
 
 -- unless' b x = if b then pure () else x
 -- when' b x = if b then x else pure ()
