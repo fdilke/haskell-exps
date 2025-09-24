@@ -1,16 +1,16 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoFieldSelectors #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-{-# HLINT ignore "Eta reduce" #-}
-{-# HLINT ignore "Avoid lambda" #-}
-{-# HLINT ignore "Redundant lambda" #-}
-{-# HLINT ignore "Collapse lambdas" #-}
-{-# HLINT ignore "Unused LANGUAGE pragma" #-}
 {-# LANGUAGE TypeApplications #-}
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+{-# HLINT ignore "Use concatMap" #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module LangFeature.Ologs
   ( Arc,
@@ -21,6 +21,8 @@ module LangFeature.Ologs
 where
 
 import Data.Maybe
+import Control.Monad
+import Data.Traversable
 
 data Arc dot = Arc
   { name :: String,
@@ -49,13 +51,47 @@ makeOlog dots arcs identities =
     err : _ -> Left err
   where
     errors =
-      concat @[] @String $
-        concat @Maybe @[String] $
-        -- (concat :: (Maybe [[String]] -> [[String]])) $
-          traverse
-            ( sequence . \(dotMapper, errorPrefix) ->
-                map ((\dot -> if dot `elem` dots then Nothing else Just $ errorPrefix <> show dot) . dotMapper) arcs
-            )
-            [ (\(_, src, _) -> src, "bad source: "),
-              (\(_, _, tgt) -> tgt, "bad target: ")
-            ]
+        concat . concat
+            -- . map (fmap maybeToList)
+            $ map
+                ( fmap maybeToList . \(dotMapper, errorPrefix) ->
+                    map ((\dot -> if dot `elem` dots then Nothing else Just $ errorPrefix <> show dot) . dotMapper) arcs
+                )
+                [ (\(_, src, _) -> src, "bad source: ")
+                , (\(_, _, tgt) -> tgt, "bad target: ")
+                ]
+
+
+data MakeOlogError dot
+    = BadSource String dot
+    | BadTarget String dot
+    deriving (Show)
+makeOlog' :: (Eq dot) => [dot] -> [(String, dot, dot)] -> [Identity] -> Either (MakeOlogError dot) (Olog dot)
+makeOlog' dots arcs0 identities = do
+    arcs <- for arcs0 \(name, source, target) -> do
+      -- unless (source `elem` dots) $ Left $ BadSource name source
+      if source `elem` dots then pure () else Left $ BadSource name source
+      unless (target `elem` dots) $ Left $ BadTarget name target
+      pure Arc{name, source, target}
+    pure Olog{dots, arcs, identities}
+-- unless' b x = if b then pure () else x
+-- when' b x = if b then x else pure ()
+
+
+bind = (>>=)
+
+    -- checkArc :: (PreArc dot -> dot, String) -> PreArc dot -> Maybe String
+    -- checkArc (mapper, errorPrefix) preArc =
+    --   if mapper preArc `elem` dots then Nothing else Just $ errorPrefix <> show dot
+    -- checkers :: [(PreArc dot -> dot, String)] =
+    --   [ (\(_, src, _) -> src, "bad source: "),
+    --     (\(_, _, tgt) -> tgt, "bad target: ")
+    --   ]
+    -- applyChecker :: (PreArc dot -> dot, String) -> Maybe String
+    -- applyChecker (mapper, prefix) =
+    --   map mapper arcs
+    -- rawStrings :: [Maybe String] = map applyChecker [ 
+    --   (\(_, src, _) -> src, "bad source: "),
+    --     (\(_, _, tgt) -> tgt, "bad target: ")
+    --   ]
+    -- errors = []
