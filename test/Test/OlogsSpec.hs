@@ -13,7 +13,7 @@ import LangFeature.Ologs
 import Test.Hspec
 import Data.Either (isRight)
 
-type MaybeOlog = Either String (Olog Int)
+type MaybeOlog = Either (MakeOlogError Int) (Olog Int)
 
 spec :: Spec
 spec = do
@@ -24,14 +24,14 @@ spec = do
         badOlog =
           makeOlog [1] [("source", 0, 1)] [] 
       in
-        badOlog `shouldBe` Left "bad source: 0"
+        badOlog `shouldBe` Left (UnknownSource "source" 0)
     it "arcs must have a target of a known dot" $
       let
         badOlog :: MaybeOlog
         badOlog =
           makeOlog [0] [("source", 0, 1)] []
       in
-        badOlog `shouldBe` Left "bad target: 1"
+        badOlog `shouldBe` Left (UnknownTarget "source" 1)
     it "arc is then ok" $
       let
         goodOlog :: MaybeOlog
@@ -45,14 +45,14 @@ spec = do
         badOlog =
             makeOlog [0] [] [([], [])]
       in
-        badOlog `shouldBe` Left "forbidden trivial identity"
+        badOlog `shouldBe` Left ForbiddenTrivialIdentity
     it "identities should only use known names" $
       let
         badOlog :: MaybeOlog
         badOlog =
             makeOlog [0] [] [(["identity"], [])]
       in
-        badOlog `shouldBe` Left "bad arc: identity"
+        badOlog `shouldBe` Left (UnknownArc "identity")
     it "arcs in lhs of identities join up" $
       let
         badOlog :: MaybeOlog
@@ -62,7 +62,7 @@ spec = do
               [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
               [(["0to1", "1to2"], ["0to2"])]
       in
-        badOlog `shouldBe` Left "bad identity lhs: [\"0to1\", \"1to2\"], [\"0to2\"]"
+        badOlog `shouldBe` Left (BadIdentityLhs ["0to1", "1to2"])
     it "arcs in rhs of identities join up" $
       let
         badOlog :: MaybeOlog
@@ -72,7 +72,7 @@ spec = do
               [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
               [(["0to2"], ["0to1", "1to2"])]
       in
-        badOlog `shouldBe` Left "bad identity rhs: [\"0to2\"], [\"0to1\", \"1to2\"]"
+        badOlog `shouldBe` Left (BadIdentityRhs ["0to1", "1to2"])
     it "lhs and rhs of identities have same source and target" $
       let
         badOlog :: MaybeOlog
@@ -82,7 +82,7 @@ spec = do
               [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
               [(["1to0", "0to1"], ["1to2", "0to1"])]
       in
-        badOlog `shouldBe` Left "incoherent identity: [[\"1to0\", \"0to1\"], [\"1to2\", \"0to1\"]]; lhs (0,0); rhs (0,2)"
+        badOlog `shouldBe` Left (IdentityMismatch ["1to0", "0to1"] ["1to2", "0to1"] (0,0)  (0,2))
     it "identities are ok" $
       let
         goodOlog :: MaybeOlog
