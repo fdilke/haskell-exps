@@ -39,6 +39,20 @@ spec = do
             makeOlog [0, 1] [("y", 1, 0), ("x", 0, 1)] []
       in
         isRight goodOlog `shouldBe` True
+    it "identities can't just say 1 = 1" $
+      let
+        badOlog :: MaybeOlog
+        badOlog =
+            makeOlog [0] [] [([], [])]
+      in
+        badOlog `shouldBe` Left "forbidden trivial identity"
+    it "identities should only use known names" $
+      let
+        badOlog :: MaybeOlog
+        badOlog =
+            makeOlog [0] [] [(["identity"], [])]
+      in
+        badOlog `shouldBe` Left "bad arc: identity"
 
   -- describe "create a basic olog" $ do
   --   it "the graph olog" $
