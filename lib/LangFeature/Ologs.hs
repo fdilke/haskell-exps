@@ -31,6 +31,9 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
 import Data.Traversable
+import Data.List.NonEmpty (nonEmpty, NonEmpty)
+import qualified Data.List.NonEmpty as NE
+import Debug.Trace
 
 data Arc dot = Arc
   { name :: String,
@@ -87,7 +90,7 @@ makeOlog dots preArcs preIdentities =
     identityKnownArcErrors =
       concat $
         map
-          ( \(lhs, rhs) ->
+          ( \(lhs, rhs) -> -- TODO: don't need to check triviality here
               (if null lhs && null rhs then [ForbiddenTrivialIdentity] else [])
                 <> catMaybes
                   ( map
@@ -110,20 +113,59 @@ makeOlog dots preArcs preIdentities =
         sources :: [dot] = init $ fst <$> arcs
     identityMismatchErrors = catMaybes $ checkMismatch <$> preIdentities
     checkMismatch :: ([String], [String]) -> Maybe (MakeOlogError dot)
-    checkMismatch (lhs, rhs) = 
-      case (leftSignature, rightSignature) of
-        (_, Nothing) -> Nothing
-        (Nothing, _) -> Nothing
-      errorUnless (leftSignature == rightSignature) $ IdentityMismatch lhs rhs leftSignature rightSignature
+    checkMismatch (lhs, rhs) = do
+      nonEmptyLhsAndSig <- case nonEmpty lhs of
+        Nothing ->
+          -- lhs empty
+          Just Nothing
+        Just nonEmptyLhs -> do
+          -- lhs non-empty
+          sig <- signature nonEmptyLhs
+          -- let sig = case signature nonEmptyLhs of
+          --       Just s -> s
+          --       Nothing -> error "map lookup failed!"
+          Just $ Just sig
+      nonEmptyRhsAndSig <- case nonEmpty rhs of
+        Nothing ->
+          -- rhs empty
+          Just Nothing
+        Just nonEmptyRhs -> do
+          -- rhs non-empty
+          sig <- signature nonEmptyRhs
+          Just $ Just sig
+      case (nonEmptyLhsAndSig, nonEmptyRhsAndSig) of
+        (Nothing, Nothing) ->
+          -- both empty
+          Just ForbiddenTrivialIdentity
+        (Just (src, tgt), Nothing) ->
+          -- right empty
+          errorUnless (src == tgt) $ NotALoop lhs
+        (Nothing, Just (src, tgt)) ->
+          -- left empty
+          errorUnless (src == tgt) $ NotALoop rhs
+        (Just lSig, Just rSig) ->
+          -- both non-empty
+          -- traceShow (lSig, rSig) $
+          errorUnless (lSig == rSig) $ IdentityMismatch lhs rhs lSig rSig
+          -- Just $ IdentityMismatch lhs rhs lSig rSig
+      -- case nonEmpty lhs of
+      --   Nothing -> case signature rhs of
+      --     Nothing -> Nothing
+      --     Just (src, tgt) -> errorUnless (src == tgt) $ NotALoop rhs
+      --   Just nonemptyLhs ->
+      --     case nonEmpty rhs of 
+      --       Nothing -> case signature nonemptyLhs of
+      --         Just (src, tgt) -> errorUnless (src == tgt) $ NotALoop lhs
+      --         Nothing -> Nothing
+      --       Just nonemptyRhs ->
+      --         errorUnless (signature nonemptyLhs == signature nonemptyRhs) $ IdentityMismatch lhs rhs leftSignature rightSignature
       where
-        leftSignature = signature lhs
-        rightSignature = signature rhs
-        signature :: [String] -> Maybe (dot, dot)
+        signature :: NonEmpty String -> Maybe (dot, dot)
         signature terms =
-          case (Map.lookup (head terms) namesToArcs) of
+          case Map.lookup (NE.last terms) namesToArcs of
             Nothing -> Nothing
             Just (src, _) ->
-              case (Map.lookup (last terms) namesToArcs) of
+              case Map.lookup (NE.head terms) namesToArcs of
                 Nothing -> Nothing
                 Just (_, tgt) -> Just (src, tgt)
 
@@ -140,6 +182,7 @@ data MakeOlogError dot
   | BadIdentityLhs [String]
   | BadIdentityRhs [String]
   | IdentityMismatch [String] [String] (dot, dot) (dot, dot)
+  | NotALoop [String]
   deriving (Show, Eq)
 
 makeOlog' :: forall dot. (Eq dot) => [dot] -> [(String, dot, dot)] -> [([String], [String])] -> Either (MakeOlogError dot) (Olog dot)
