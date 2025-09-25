@@ -7,32 +7,31 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE NoFieldSelectors #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
 {-# HLINT ignore "Move catMaybes" #-}
 {-# HLINT ignore "Use mapMaybe" #-}
 {-# HLINT ignore "Use list comprehension" #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE NoFieldSelectors #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module LangFeature.Ologs
   ( Arc,
     Identity,
     Olog,
     makeOlog,
-    MakeOlogError(..),
+    MakeOlogError (..),
   )
 where
 
 import Control.Monad
 import Data.Foldable (for_)
+import Data.List.NonEmpty (NonEmpty, nonEmpty)
+import qualified Data.List.NonEmpty as NE
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
 import Data.Traversable
-import Data.List.NonEmpty (nonEmpty, NonEmpty)
-import qualified Data.List.NonEmpty as NE
 import Debug.Trace
 
 data Arc dot = Arc
@@ -55,14 +54,14 @@ data Olog dot = Olog
   }
   deriving (Show, Eq)
 
-makeOlog ::
+makeOlogOld ::
   forall dot.
   (Eq dot, Show dot) =>
   [dot] ->
   [(String, dot, dot)] ->
   [([String], [String])] ->
   Either (MakeOlogError dot) (Olog dot)
-makeOlog dots preArcs preIdentities =
+makeOlogOld dots preArcs preIdentities =
   case errors of
     [] ->
       Right $
@@ -85,12 +84,13 @@ makeOlog dots preArcs preIdentities =
             (\(_, _, tgt) -> tgt, UnknownTarget)
           ]
     knownArcNames = map (\(name, _, _) -> name) preArcs
-    identityErrors :: [MakeOlogError dot] = 
+    identityErrors :: [MakeOlogError dot] =
       identityKnownArcErrors <> identityLhsJoinErrors <> identityRhsJoinErrors <> identityMismatchErrors
     identityKnownArcErrors =
       concat $
         map
-          ( \(lhs, rhs) -> -- TODO: don't need to check triviality here
+          ( \(lhs, rhs) ->
+              -- TODO: don't need to check triviality here
               (if null lhs && null rhs then [ForbiddenTrivialIdentity] else [])
                 <> catMaybes
                   ( map
@@ -100,12 +100,14 @@ makeOlog dots preArcs preIdentities =
           )
           preIdentities
     namesToArcs :: Map String (dot, dot) = Map.fromList $ (\(s, src, tgt) -> (s, (src, tgt))) <$> preArcs
-    identityLhsJoinErrors = identityXhsJoinErrors BadIdentityLhs fst
-    identityRhsJoinErrors = identityXhsJoinErrors BadIdentityRhs snd
-    identityXhsJoinErrors :: ([String] -> MakeOlogError dot) -> (([String], [String]) -> [String]) ->
+    identityLhsJoinErrors = identityXhsJoinErrors NonJoiningExpressionLhs fst
+    identityRhsJoinErrors = identityXhsJoinErrors NonJoiningExpressionRhs snd
+    identityXhsJoinErrors ::
+      ([String] -> MakeOlogError dot) ->
+      (([String], [String]) -> [String]) ->
       [MakeOlogError dot]
     identityXhsJoinErrors errorFactory picker = catMaybes $ map (checkTerm errorFactory . picker) preIdentities
-    checkTerm :: ([String] -> MakeOlogError dot) -> [String] ->  Maybe (MakeOlogError dot)
+    checkTerm :: ([String] -> MakeOlogError dot) -> [String] -> Maybe (MakeOlogError dot)
     checkTerm errorFactory arcNames = errorUnless (targets == sources) $ errorFactory arcNames
       where
         arcs :: [(dot, dot)] = catMaybes $ flip Map.lookup namesToArcs <$> arcNames
@@ -121,9 +123,6 @@ makeOlog dots preArcs preIdentities =
         Just nonEmptyLhs -> do
           -- lhs non-empty
           sig <- signature nonEmptyLhs
-          -- let sig = case signature nonEmptyLhs of
-          --       Just s -> s
-          --       Nothing -> error "map lookup failed!"
           Just $ Just sig
       nonEmptyRhsAndSig <- case nonEmpty rhs of
         Nothing ->
@@ -145,20 +144,7 @@ makeOlog dots preArcs preIdentities =
           errorUnless (src == tgt) $ NotALoop rhs
         (Just lSig, Just rSig) ->
           -- both non-empty
-          -- traceShow (lSig, rSig) $
           errorUnless (lSig == rSig) $ IdentityMismatch lhs rhs lSig rSig
-          -- Just $ IdentityMismatch lhs rhs lSig rSig
-      -- case nonEmpty lhs of
-      --   Nothing -> case signature rhs of
-      --     Nothing -> Nothing
-      --     Just (src, tgt) -> errorUnless (src == tgt) $ NotALoop rhs
-      --   Just nonemptyLhs ->
-      --     case nonEmpty rhs of 
-      --       Nothing -> case signature nonemptyLhs of
-      --         Just (src, tgt) -> errorUnless (src == tgt) $ NotALoop lhs
-      --         Nothing -> Nothing
-      --       Just nonemptyRhs ->
-      --         errorUnless (signature nonemptyLhs == signature nonemptyRhs) $ IdentityMismatch lhs rhs leftSignature rightSignature
       where
         signature :: NonEmpty String -> Maybe (dot, dot)
         signature terms =
@@ -169,44 +155,70 @@ makeOlog dots preArcs preIdentities =
                 Nothing -> Nothing
                 Just (_, tgt) -> Just (src, tgt)
 
-
 -- type f $ x = f x
 -- type ($) f x = f x
-
 
 data MakeOlogError dot
   = UnknownSource String dot
   | UnknownTarget String dot
   | ForbiddenTrivialIdentity
   | UnknownArc String
-  | BadIdentityLhs [String]
-  | BadIdentityRhs [String]
+  | NonJoiningExpressionLhs [String]
+  | NonJoiningExpressionRhs [String]
   | IdentityMismatch [String] [String] (dot, dot) (dot, dot)
   | NotALoop [String]
   deriving (Show, Eq)
 
-makeOlog' :: forall dot. (Eq dot) => [dot] -> [(String, dot, dot)] -> [([String], [String])] -> Either (MakeOlogError dot) (Olog dot)
-makeOlog' dots preArcs preIdentities = do
+makeOlog ::
+  forall dot.
+  (Eq dot) =>
+  [dot] ->
+  [(String, dot, dot)] ->
+  [([String], [String])] ->
+  Either (MakeOlogError dot) (Olog dot)
+makeOlog dots preArcs preIdentities = do
   arcs <- for preArcs \(name, source, target) -> do
+    -- TODO reuse `namesToArcs`?
     unless (source `elem` dots) $ Left $ UnknownSource name source
     unless (target `elem` dots) $ Left $ UnknownTarget name target
-    pure Arc {name, source, target}
+    pure Arc{name, source, target}
   identities <- for preIdentities \(lhs, rhs) -> do
-    when (null lhs && null rhs) $ Left ForbiddenTrivialIdentity
-    -- for_ (lhs <> rhs) \arc -> unless (arc `elem` knownArcNames) $ Left $ UnknownArc arc
-    for_ (lhs <> rhs) \arc -> do
-      case Map.lookup arc namesToArcs of
-        Just (source, target) -> do
-          pure ()
-        Nothing -> Left $ UnknownArc arc
-    -- unless (arc `elem` map (\(name,_,_) -> name) preArcs) $ Left $ UnknownArc arc
+    lhs' :: [(String, (dot, dot))] <- for lhs \arcName -> case Map.lookup arcName namesToArcs of
+      Nothing -> Left $ UnknownArc arcName
+      Just srcAndTgt -> pure (arcName, srcAndTgt)
+    rhs' :: [(String, (dot, dot))] <- for rhs \arcName -> case Map.lookup arcName namesToArcs of
+      Nothing -> Left $ UnknownArc arcName
+      Just srcAndTgt -> pure (arcName, srcAndTgt)
+    case (nonEmpty lhs', nonEmpty rhs') of
+      (Nothing, Nothing) ->
+        Left ForbiddenTrivialIdentity
+      (Just l, Nothing) -> do
+        checkTerm NonJoiningExpressionLhs l
+        let (_, (_, tgt)) = NE.head l
+        let (_, (src, _)) = NE.last l
+        errorWhen (src /= tgt) $ NotALoop lhs
+      (Nothing, Just r) -> do
+        checkTerm NonJoiningExpressionRhs r
+        let (_, (_, tgt)) = NE.head r
+        let (_, (src, _)) = NE.last r
+        errorWhen (src /= tgt) $ NotALoop rhs
+      (Just l, Just r) -> do
+        checkTerm NonJoiningExpressionLhs l
+        checkTerm NonJoiningExpressionRhs r
+        let combinedSrcTgt xhs = (fst $ NE.last xhs, snd $ NE.head xhs)
+            l' = combinedSrcTgt l
+            r' = combinedSrcTgt r
+        errorWhen (l' /=  r') $ IdentityMismatch lhs rhs (snd l') (snd r')
     pure Identity {lhs, rhs}
   pure Olog {dots, arcs, identities}
   where
-    namesToArcs :: Map String (dot, dot)
-    -- namesToArcs = map (\(name,_,_) -> name) preArcs
-    namesToArcs = Map.fromList $ (\(s, src, tgt) -> (s, (src, tgt))) <$> preArcs
-    pairAdjacent xs = zip xs $ tail xs
+    checkTerm errorFactory arcs = do
+      let
+        targets = NE.tail $ snd . snd <$> (arcs :: (NonEmpty (String, (dot, dot))))
+        sources = NE.init $ fst . snd <$> arcs
+      errorWhen (sources /= targets) $ errorFactory $ map fst $ NE.toList arcs 
+    errorWhen b e = if b then Left e else Right ()
+    namesToArcs = Map.fromList $ (\(name, src, tgt) -> (name, (src, tgt))) <$> preArcs
 
 -- checkArc :: (PreArc dot -> dot, String) -> PreArc dot -> Maybe String
 -- checkArc (mapper, errorPrefix) preArc =

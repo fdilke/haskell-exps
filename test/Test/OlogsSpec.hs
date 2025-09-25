@@ -42,7 +42,7 @@ spec = do
       let badOlog :: MaybeOlog
           badOlog =
             makeOlog [0] [] [(["identity"], [])]
-       in badOlog `shouldBe` Left (UnknownArc "identity")
+     in badOlog `shouldBe` Left (UnknownArc "identity")
     it "arcs in lhs of identities join up" $
       let badOlog :: MaybeOlog
           badOlog =
@@ -50,7 +50,7 @@ spec = do
               [0, 1, 2]
               [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
               [(["0to1", "1to2"], ["0to2"])]
-       in badOlog `shouldBe` Left (BadIdentityLhs ["0to1", "1to2"])
+       in badOlog `shouldBe` Left (NonJoiningExpressionLhs ["0to1", "1to2"])
     it "arcs in rhs of identities join up" $
       let badOlog :: MaybeOlog
           badOlog =
@@ -58,7 +58,7 @@ spec = do
               [0, 1, 2]
               [("0to1", 0, 1), ("1to2", 1, 2), ("0to2", 0, 2), ("1to0", 1, 0)]
               [(["0to2"], ["0to1", "1to2"])]
-       in badOlog `shouldBe` Left (BadIdentityRhs ["0to1", "1to2"])
+       in badOlog `shouldBe` Left (NonJoiningExpressionRhs ["0to1", "1to2"])
     it "lhs and rhs of identities have same source and target" $
       let badOlog :: MaybeOlog
           badOlog =
